@@ -12,50 +12,50 @@
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
-  --primary: #5c2d91;
+  --primary: #4c16b3;
   --primary-foreground: #ffffff;
-  --secondary: #005f8a;
+  --secondary: #227e91;
   --secondary-foreground: #ffffff;
-  --muted: #e8e0f0;
-  --muted-foreground: #595959;
-  --accent: #b5006e;
+  --muted: #f7f6f9;
+  --muted-foreground: #4b5563;
+  --accent: #cc007a;
   --accent-foreground: #ffffff;
-  --destructive: #c0211a;
+  --destructive: #b42318;
   --destructive-foreground: #ffffff;
-  --border: #767676;
+  --border: #d8d1e3;
   --input: transparent;
   --input-background: #f3eff8;
   --switch-background: #9e9e9e;
   --font-weight-medium: 600;
   --font-weight-normal: 400;
-  --ring: #5c2d91;
+  --ring: #cc007a;
 
   /* Semantic semantic tokens */
-  --success: #186830;
+  --success: #176c45;
   --success-foreground: #ffffff;
   --success-bg: #e8f5ec;
-  --warning: #8b4700;
+  --warning: #7a4b00;
   --warning-foreground: #ffffff;
   --warning-bg: #fef3c7;
-  --error: #c0211a;
+  --error: #b42318;
   --error-foreground: #ffffff;
   --error-bg: #fde8e8;
   --text-disabled: #9e9e9e;
 
-  --chart-1: #5c2d91;
-  --chart-2: #005f8a;
-  --chart-3: #b5006e;
-  --chart-4: #186830;
-  --chart-5: #8b4700;
+  --chart-1: #4c16b3;
+  --chart-2: #227e91;
+  --chart-3: #cc007a;
+  --chart-4: #176c45;
+  --chart-5: #7a4b00;
   --radius: 0.5rem;
   --sidebar: #f3eff8;
   --sidebar-foreground: #1a1a1a;
-  --sidebar-primary: #5c2d91;
+  --sidebar-primary: #4c16b3;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #e8e0f0;
   --sidebar-accent-foreground: #1a1a1a;
   --sidebar-border: #767676;
-  --sidebar-ring: #5c2d91;
+  --sidebar-ring: #cc007a;
 }
 
 .dark {
@@ -205,5 +205,31 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  :focus-visible {
+    outline: 3px solid #cc007a;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .rounded,
+  .rounded-sm {
+    border-radius: 4px !important;
+  }
+
+  .rounded-md,
+  .rounded-lg {
+    border-radius: 6px !important;
+  }
+
+  .rounded-xl,
+  .rounded-2xl {
+    border-radius: 8px !important;
+  }
+
+  .rounded-full {
+    border-radius: 999px !important;
   }
 }

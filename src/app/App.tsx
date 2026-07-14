@@ -49,15 +49,17 @@ import {
 
 const THEMES = {
   enable: {
-    name: "Enable Purple",
-    primary: "#6B21A8",
-    primaryLight: "#F3E8FF",
-    primaryDark: "#4C1A7A",
-    accent: "#FF6B00",
-    accentLight: "#FFF0E6",
-    nav: "#6B21A8",
+    name: "Enable Standard",
+    primary: "#4C16B3",
+    primaryLight: "#F1EEFF",
+    primaryDark: "#28066A",
+    accent: "#CC007A",
+    accentLight: "#FCE7F4",
+    support: "#227E91",
+    supportLight: "#E7F6F8",
+    nav: "#28066A",
     navText: "#FFFFFF",
-    badge: "#FF6B00",
+    badge: "#CC007A",
   },
   blue: {
     name: "Ocean Blue",
@@ -66,6 +68,8 @@ const THEMES = {
     primaryDark: "#0D47A1",
     accent: "#FF8F00",
     accentLight: "#FFF8E1",
+    support: "#005F8A",
+    supportLight: "#E8F5FB",
     nav: "#1565C0",
     navText: "#FFFFFF",
     badge: "#FF8F00",
@@ -77,6 +81,8 @@ const THEMES = {
     primaryDark: "#004D40",
     accent: "#BF360C",
     accentLight: "#FBE9E7",
+    support: "#00695C",
+    supportLight: "#E0F2F0",
     nav: "#00695C",
     navText: "#FFFFFF",
     badge: "#BF360C",
@@ -88,6 +94,8 @@ const THEMES = {
     primaryDark: "#000000",
     accent: "#FFD600",
     accentLight: "#FFFDE7",
+    support: "#000000",
+    supportLight: "#F5F5F5",
     nav: "#000000",
     navText: "#FFD600",
     badge: "#FFD600",
@@ -325,10 +333,48 @@ function HomeScreen({
           </button>
         )}
 
-        {/* Quick actions */}
+        {/* Latest journeys */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider">
+              Latest journeys
+            </p>
+            <button onClick={() => setScreen("journeys")} className="text-[11px] font-semibold" style={{ color: theme.primary }}>
+              View all
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {journeys.filter((j) => j.status !== "active").slice(0, 2).map((j) => (
+              <button
+                key={j.id}
+                onClick={() => setScreen("journey-detail", j.id)}
+                className="bg-white rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-sm border border-[#EDE8F4] text-left active:bg-[#F3E8FF] transition-colors"
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: theme.primaryLight }}
+                >
+                  <JourneyIcon type={j.type} size={16} color={theme.primary} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#1A1A1A] truncate" style={ts}>
+                    {j.title}
+                  </p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Clock size={10} color="#767676" />
+                    <span className="text-[10px] text-[#767676]">{j.date}</span>
+                  </div>
+                </div>
+                <ChevronRight size={14} color="#C0A8D8" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
         <div>
           <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider mb-2.5">
-            Quick actions
+            Actions
           </p>
           <div className="grid grid-cols-2 gap-2.5">
             {[
@@ -341,17 +387,9 @@ function HomeScreen({
                 fg: "#FFFFFF",
               },
               {
-                icon: AlertOctagon,
-                label: "SOS / Safety",
-                sub: "Share location, call help",
-                screen: "safety" as Screen,
-                bg: "#C62828",
-                fg: "#FFFFFF",
-              },
-              {
-                icon: Map,
-                label: "My Journeys",
-                sub: "View saved routes",
+                icon: CheckCircle,
+                label: "Checklist",
+                sub: "Review saved journey tasks",
                 screen: "journeys" as Screen,
                 bg: theme.primaryLight,
                 fg: theme.primary,
@@ -361,8 +399,16 @@ function HomeScreen({
                 label: "Get Help",
                 sub: "Tutorials and FAQs",
                 screen: "help" as Screen,
-                bg: "#FFF3E0",
-                fg: "#E65100",
+                bg: theme.supportLight ?? "#E7F6F8",
+                fg: theme.support ?? "#227E91",
+              },
+              {
+                icon: AlertOctagon,
+                label: "SOS Safety",
+                sub: "Share location, call help",
+                screen: "safety" as Screen,
+                bg: "#B42318",
+                fg: "#FFFFFF",
               },
             ].map(({ icon: Icon, label, sub, screen: s, bg, fg }) => (
               <button
@@ -385,44 +431,6 @@ function HomeScreen({
                     {sub}
                   </p>
                 </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming */}
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider">
-              Upcoming
-            </p>
-            <button onClick={() => setScreen("journeys")} className="text-[11px] font-semibold" style={{ color: theme.primary }}>
-              View all
-            </button>
-          </div>
-          <div className="flex flex-col gap-2">
-            {journeys.filter((j) => j.status === "upcoming").slice(0, 2).map((j) => (
-              <button
-                key={j.id}
-                onClick={() => setScreen("journey-detail", j.id)}
-                className="bg-white rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-sm border border-[#EDE8F4] text-left active:bg-[#F3E8FF] transition-colors"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: theme.primaryLight }}
-                >
-                  <JourneyIcon type={j.type} size={16} color={theme.primary} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#1A1A1A] truncate" style={ts}>
-                    {j.title}
-                  </p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Clock size={10} color="#767676" />
-                    <span className="text-[10px] text-[#767676]">{j.date}</span>
-                  </div>
-                </div>
-                <ChevronRight size={14} color="#C0A8D8" />
               </button>
             ))}
           </div>
@@ -529,9 +537,17 @@ function JourneyDetailScreen({
 }) {
   const [addingNote, setAddingNote] = useState(false);
   const [notes, setNotes] = useState(journey.notes);
+  const [stepMedia, setStepMedia] = useState<Record<number, string[]>>({});
   const ts = { fontSize };
   const done = journey.steps.filter((s) => s.done).length;
   const progress = (done / journey.steps.length) * 100;
+  const currentStep = journey.steps[done] ?? journey.steps[journey.steps.length - 1];
+  const addStepMedia = (stepId: number, type: string) => {
+    setStepMedia((prev) => ({
+      ...prev,
+      [stepId]: [...(prev[stepId] ?? []), type],
+    }));
+  };
 
   return (
     <div className="flex flex-col bg-[#F8F5FC] min-h-full">
@@ -583,9 +599,8 @@ function JourneyDetailScreen({
           {journey.steps.map((step, i) => {
             const isCurrent = !step.done && i === done;
             return (
-              <button
+              <div
                 key={step.id}
-                onClick={() => onToggleStep(journey.id, step.id)}
                 className="flex items-start gap-3 rounded-xl px-3 py-3 text-left w-full transition-all active:scale-98"
                 style={{
                   backgroundColor: step.done
@@ -598,7 +613,11 @@ function JourneyDetailScreen({
                   }`,
                 }}
               >
-                <div className="flex-shrink-0 mt-0.5">
+                <button
+                  onClick={() => onToggleStep(journey.id, step.id)}
+                  className="flex-shrink-0 mt-0.5"
+                  aria-label={step.done ? "Mark step incomplete" : "Mark step complete"}
+                >
                   {step.done ? (
                     <CheckCircle size={20} color="#186830" fill="#186830" />
                   ) : (
@@ -608,7 +627,7 @@ function JourneyDetailScreen({
                       strokeWidth={isCurrent ? 2.5 : 1.5}
                     />
                   )}
-                </div>
+                </button>
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-sm leading-snug font-medium"
@@ -637,8 +656,37 @@ function JourneyDetailScreen({
                       <span className="text-[9px] text-white font-semibold">Tap to hear</span>
                     </div>
                   )}
+                  {isCurrent && (
+                    <div className="mt-2 rounded-lg border border-[#D8D1E3] bg-white p-2">
+                      <p className="text-[10px] font-bold text-[#4B5563] mb-1">
+                        Add media to this step
+                      </p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { icon: Camera, label: "Photo" },
+                          { icon: Mic, label: "Voice" },
+                          { icon: FileText, label: "Note" },
+                        ].map(({ icon: Icon, label }) => (
+                          <button
+                            key={label}
+                            onClick={() => addStepMedia(step.id, label)}
+                            className="flex items-center justify-center gap-1 rounded-md border border-[#D8D1E3] bg-[#FBFAFC] px-1.5 py-1.5 text-[10px] font-bold"
+                            style={{ color: theme.primary }}
+                          >
+                            <Icon size={11} />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {(stepMedia[step.id] ?? []).length > 0 && (
+                        <p className="mt-1.5 text-[10px] text-[#4B5563]">
+                          Attached to step {i + 1}: {(stepMedia[step.id] ?? []).join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -668,21 +716,16 @@ function JourneyDetailScreen({
           )}
         </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {[
-            { icon: Camera, label: "Photo" },
-            { icon: Mic, label: "Voice Note" },
-            { icon: MapPin, label: "Share Location" },
-          ].map(({ icon: Icon, label }) => (
-            <button
-              key={label}
-              className="flex flex-col items-center gap-1.5 rounded-xl py-2.5 border border-[#EDE8F4] bg-white active:bg-[#F3E8FF] transition-colors"
-            >
-              <Icon size={16} color={theme.primary} />
-              <span className="text-[10px] font-semibold text-[#595959]">{label}</span>
-            </button>
-          ))}
+        <div className="bg-white rounded-xl border border-[#EDE8F4] p-3 mb-3">
+          <div className="flex items-center gap-2">
+            <MapPin size={15} color={theme.primary} />
+            <div>
+              <p className="text-xs font-bold text-[#1A1A1A]">Current step media</p>
+              <p className="text-[11px] text-[#595959]">
+                Photo, voice and note attachments are saved against: {currentStep?.text}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* SOS strip */}
@@ -711,13 +754,21 @@ function NewJourneyScreen({
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("");
   const [type, setType] = useState("Train");
-  const [steps, setSteps] = useState(["", ""]);
+  const [steps, setSteps] = useState([
+    { text: "", media: [] as string[] },
+    { text: "", media: [] as string[] },
+  ]);
   const ts = { fontSize };
 
-  const addStep = () => setSteps([...steps, ""]);
+  const addStep = () => setSteps([...steps, { text: "", media: [] }]);
   const updateStep = (i: number, v: string) => {
     const copy = [...steps];
-    copy[i] = v;
+    copy[i] = { ...copy[i], text: v };
+    setSteps(copy);
+  };
+  const addMediaToDraftStep = (i: number, type: string) => {
+    const copy = [...steps];
+    copy[i] = { ...copy[i], media: [...copy[i].media, type] };
     setSteps(copy);
   };
 
@@ -817,20 +868,44 @@ function NewJourneyScreen({
           <div className="flex flex-col gap-3">
             <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[2].sub}</p>
             {steps.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="rounded-xl border border-[#D8D1E3] bg-white p-2.5">
+                <div className="flex items-center gap-2">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black text-white"
-                  style={{ backgroundColor: s ? theme.primary : "#C0A8D8" }}
+                  style={{ backgroundColor: s.text ? theme.primary : "#C0A8D8" }}
                 >
                   {i + 1}
                 </div>
                 <input
                   className="flex-1 border-2 rounded-xl px-3 py-2.5 text-sm text-[#1A1A1A] outline-none"
-                  style={{ borderColor: s ? theme.primary : "#EDE8F4", fontFamily: "inherit" }}
+                  style={{ borderColor: s.text ? theme.primary : "#EDE8F4", fontFamily: "inherit" }}
                   placeholder={`Step ${i + 1}...`}
-                  value={s}
+                  value={s.text}
                   onChange={(e) => updateStep(i, e.target.value)}
                 />
+                </div>
+                <div className="ml-8 mt-2 grid grid-cols-3 gap-1.5">
+                  {[
+                    { icon: Camera, label: "Photo" },
+                    { icon: Mic, label: "Voice" },
+                    { icon: FileText, label: "Note" },
+                  ].map(({ icon: Icon, label }) => (
+                    <button
+                      key={label}
+                      onClick={() => addMediaToDraftStep(i, label)}
+                      className="flex items-center justify-center gap-1 rounded-md border border-[#D8D1E3] bg-[#FBFAFC] px-1.5 py-1.5 text-[10px] font-bold"
+                      style={{ color: theme.primary }}
+                    >
+                      <Icon size={11} />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {s.media.length > 0 && (
+                  <p className="ml-8 mt-1.5 text-[10px] text-[#4B5563]">
+                    Attached to step {i + 1}: {s.media.join(", ")}
+                  </p>
+                )}
               </div>
             ))}
             <button
