@@ -106,6 +106,7 @@ type ThemeKey = keyof typeof THEMES;
 type Screen =
   | "home"
   | "journeys"
+  | "journey-prep"
   | "journey-detail"
   | "journey-new"
   | "safety"
@@ -122,7 +123,6 @@ const SAMPLE_JOURNEYS = [
     id: 1,
     title: "Glasgow Central to Edinburgh Waverley",
     type: "Train",
-    date: "Today, 14:30",
     status: "active",
     steps: [
       { id: 1, text: "Leave home and walk to bus stop on Main Street", done: true },
@@ -134,13 +134,11 @@ const SAMPLE_JOURNEYS = [
     ],
     notes: "Ask a conductor or station staff if you need help.",
     image: "https://images.unsplash.com/photo-1551801841-ecad875a5142?w=400&h=160&fit=crop&auto=format",
-    reminder: "14:00 — Leave for the bus stop",
   },
   {
     id: 2,
     title: "Weekly Shopping Trip — Tesco Partick",
     type: "Bus",
-    date: "Thu 3 Jul, 10:00",
     status: "upcoming",
     steps: [
       { id: 1, text: "Take Bus 9 from Byres Road stop", done: false },
@@ -150,14 +148,12 @@ const SAMPLE_JOURNEYS = [
       { id: 5, text: "Return bus stop is across the road", done: false },
     ],
     notes: "Your oyster card is in your front pocket.",
-    image: null,
-    reminder: "09:45 — Get ready to leave",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=160&fit=crop&auto=format",
   },
   {
     id: 3,
     title: "GP Appointment — Woodlands Medical",
     type: "Walk",
-    date: "Fri 4 Jul, 09:15",
     status: "upcoming",
     steps: [
       { id: 1, text: "Walk along Great Western Road — 12 minutes", done: false },
@@ -166,8 +162,21 @@ const SAMPLE_JOURNEYS = [
       { id: 4, text: "Wait in the blue chairs by the window", done: false },
     ],
     notes: "Appointment is with Dr Ahmed. You can bring your phone.",
-    image: null,
-    reminder: "09:00 — Time to leave for appointment",
+    image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=160&fit=crop&auto=format",
+  },
+  {
+    id: 4,
+    title: "Visit to Edinburgh Castle",
+    type: "Train",
+    status: "saved",
+    steps: [
+      { id: 1, text: "Pack ticket, wallet, phone and support card", done: false },
+      { id: 2, text: "Take the train to Edinburgh Waverley", done: false },
+      { id: 3, text: "Follow signs to the taxi rank", done: false },
+      { id: 4, text: "Ask staff for help if the route feels busy", done: false },
+    ],
+    notes: "Use the quieter entrance if the main gate is crowded.",
+    image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=160&fit=crop&auto=format",
   },
 ];
 
@@ -180,7 +189,7 @@ const SAMPLE_CONTACTS = [
 const FAQS = [
   {
     q: "What do I do if my bus or train is delayed?",
-    a: "Stay calm and wait. Check the information boards at the stop or station. If you're unsure what to do, press the SOS button in the app to share your location and call a contact.",
+    a: "Stay calm and wait. Check the information boards at the stop or station. If you're unsure what to do, use SOS to call or message an emergency contact.",
   },
   {
     q: "How do I add an emergency contact?",
@@ -195,8 +204,8 @@ const FAQS = [
     a: "Open a journey, scroll down and tap 'Add Photo'. You can take a new photo or choose one from your camera roll.",
   },
   {
-    q: "Can I change the text size?",
-    a: "Yes — go to Settings and use the 'Text Size' slider to make text bigger or smaller.",
+    q: "Can I change the colour palette?",
+    a: "Yes — go to Settings and choose the colour theme that feels clearest and easiest to use.",
   },
   {
     q: "What is text-to-speech?",
@@ -222,26 +231,18 @@ function StatusBadge({ status, theme }: { status: string; theme: typeof THEMES.e
         IN PROGRESS
       </span>
     );
-  return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E8E8E8] text-[#555]">
-      UPCOMING
-    </span>
-  );
+  return null;
 }
 
 // ── Screens ──────────────────────────────────────────────────────────────────
 
 function HomeScreen({
   theme,
-  tts,
-  offline,
   setScreen,
   journeys,
   fontSize,
 }: {
   theme: typeof THEMES.enable;
-  tts: boolean;
-  offline: boolean;
   setScreen: (s: Screen, extra?: number) => void;
   journeys: typeof SAMPLE_JOURNEYS;
   fontSize: number;
@@ -251,46 +252,11 @@ function HomeScreen({
 
   return (
     <div className="flex flex-col gap-0">
-      {/* Hero header */}
-      <div
-        className="px-4 pt-4 pb-5 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${theme.primaryDark} 0%, ${theme.primary} 100%)` }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5">
-            {offline ? (
-              <WifiOff size={11} color="rgba(255,255,255,0.7)" />
-            ) : (
-              <Wifi size={11} color="rgba(255,255,255,0.7)" />
-            )}
-            <span className="text-white/70 text-[10px]">
-              {offline ? "Offline — local data only" : "Connected"}
-            </span>
-          </div>
-          <button className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-            <User size={13} color="white" />
-          </button>
-        </div>
-        <p className="text-white/80 text-xs mb-0.5" style={ts}>Good afternoon</p>
-        <h1 className="text-white font-black text-xl leading-tight mb-1" style={ts}>
-          Hi Jamie 👋
-        </h1>
-        <p className="text-white/70 text-xs" style={ts}>
-          {active ? "You have a journey in progress" : "Ready for your next journey?"}
-        </p>
-        {tts && (
-          <div className="mt-2 flex items-center gap-1.5 bg-white/15 rounded-lg px-2.5 py-1.5 w-fit">
-            <Volume2 size={11} color="white" />
-            <span className="text-white text-[10px] font-semibold">Text-to-speech ON</span>
-          </div>
-        )}
-      </div>
-
       <div className="px-4 py-4 flex flex-col gap-4 bg-[#F8F5FC]">
         {/* Active journey card */}
         {active && (
           <button
-            onClick={() => setScreen("journey-detail", active.id)}
+            onClick={() => setScreen("journey-prep", active.id)}
             className="w-full text-left rounded-2xl overflow-hidden shadow-md"
           >
             {active.image && (
@@ -344,25 +310,31 @@ function HomeScreen({
             </button>
           </div>
           <div className="flex flex-col gap-2">
-            {journeys.filter((j) => j.status !== "active").slice(0, 2).map((j) => (
+            {journeys.filter((j) => j.status !== "active").slice(0, 3).map((j) => (
               <button
                 key={j.id}
-                onClick={() => setScreen("journey-detail", j.id)}
+                onClick={() => setScreen("journey-prep", j.id)}
                 className="bg-white rounded-xl px-3 py-2.5 flex items-center gap-2.5 shadow-sm border border-[#EDE8F4] text-left active:bg-[#F3E8FF] transition-colors"
               >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: theme.primaryLight }}
-                >
-                  <JourneyIcon type={j.type} size={16} color={theme.primary} />
-                </div>
+                {j.image ? (
+                  <img src={j.image} alt={j.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: theme.primaryLight }}
+                  >
+                    <JourneyIcon type={j.type} size={16} color={theme.primary} />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#1A1A1A] truncate" style={ts}>
                     {j.title}
                   </p>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <Clock size={10} color="#767676" />
-                    <span className="text-[10px] text-[#767676]">{j.date}</span>
+                    <CheckCircle size={10} color="#176C45" />
+                    <span className="text-[10px] text-[#4B5563]">
+                      {j.steps.length} journey steps
+                    </span>
                   </div>
                 </div>
                 <ChevronRight size={14} color="#C0A8D8" />
@@ -394,22 +366,6 @@ function HomeScreen({
                 bg: theme.primaryLight,
                 fg: theme.primary,
               },
-              {
-                icon: HelpCircle,
-                label: "Get Help",
-                sub: "Tutorials and FAQs",
-                screen: "help" as Screen,
-                bg: theme.supportLight ?? "#E7F6F8",
-                fg: theme.support ?? "#227E91",
-              },
-              {
-                icon: AlertOctagon,
-                label: "SOS Safety",
-                sub: "Share location, call help",
-                screen: "safety" as Screen,
-                bg: "#B42318",
-                fg: "#FFFFFF",
-              },
             ].map(({ icon: Icon, label, sub, screen: s, bg, fg }) => (
               <button
                 key={label}
@@ -433,15 +389,6 @@ function HomeScreen({
                 </div>
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Reminder */}
-        <div className="bg-[#FFF3E0] border border-[#FFD0A0] rounded-xl px-3 py-2.5 flex items-start gap-2.5">
-          <Bell size={15} color="#E65100" className="mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-bold text-[#BF360C]">Reminder</p>
-            <p className="text-xs text-[#E65100]">{active?.reminder || "No reminders today"}</p>
           </div>
         </div>
       </div>
@@ -479,7 +426,7 @@ function JourneysScreen({
         {journeys.map((j) => (
           <button
             key={j.id}
-            onClick={() => setScreen("journey-detail", j.id)}
+            onClick={() => setScreen("journey-prep", j.id)}
             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EDE8F4] text-left active:shadow-md transition-shadow"
           >
             {j.image && (
@@ -502,12 +449,8 @@ function JourneysScreen({
               </div>
               <div className="flex items-center gap-3 ml-10">
                 <div className="flex items-center gap-1">
-                  <Clock size={10} color="#767676" />
-                  <span className="text-[10px] text-[#767676]">{j.date}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <CheckCircle size={10} color="#186830" />
-                  <span className="text-[10px] text-[#186830]">
+                  <CheckCircle size={10} color="#176C45" />
+                  <span className="text-[10px] text-[#176C45]">
                     {j.steps.filter((s) => s.done).length}/{j.steps.length} steps
                   </span>
                 </div>
@@ -516,6 +459,141 @@ function JourneysScreen({
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function JourneyPrepScreen({
+  theme,
+  journey,
+  setScreen,
+  fontSize,
+}: {
+  theme: typeof THEMES.enable;
+  journey: (typeof SAMPLE_JOURNEYS)[0];
+  setScreen: (s: Screen, extra?: number) => void;
+  fontSize: number;
+}) {
+  const [checked, setChecked] = useState<Record<string, boolean>>({
+    keys: true,
+    phone: true,
+  });
+  const ts = { fontSize };
+  const items = [
+    { id: "keys", label: "Keys" },
+    { id: "ticket", label: "Ticket or travel card" },
+    { id: "phone", label: "Phone charged" },
+    { id: "umbrella", label: "Umbrella or coat" },
+    { id: "support", label: "Support contact card" },
+  ];
+
+  return (
+    <div className="flex flex-col bg-[#F8F5FC] min-h-full">
+      <div className="bg-white border-b border-[#EDE8F4]">
+        <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+          <button
+            onClick={() => setScreen("journeys")}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: theme.primaryLight }}
+          >
+            <ChevronLeft size={16} color={theme.primary} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-[#767676] font-semibold uppercase tracking-wide">
+              Before you go
+            </p>
+            <h2 className="text-sm font-black text-[#1A1A1A] truncate" style={ts}>
+              Journey checklist
+            </h2>
+          </div>
+        </div>
+        {journey.image && (
+          <img src={journey.image} alt={journey.title} className="w-full h-28 object-cover" />
+        )}
+      </div>
+
+      <div className="px-4 pt-4 pb-24 flex flex-col gap-3">
+        <div className="bg-white rounded-xl border border-[#EDE8F4] p-3">
+          <p className="text-sm font-bold text-[#1A1A1A]" style={ts}>
+            {journey.title}
+          </p>
+          <p className="text-xs text-[#4B5563] mt-1">
+            Check these before opening your journey steps.
+          </p>
+        </div>
+
+        {items.map((item) => {
+          const isChecked = checked[item.id] ?? false;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setChecked((prev) => ({ ...prev, [item.id]: !isChecked }))}
+              className="bg-white rounded-xl border border-[#EDE8F4] px-3 py-3 flex items-center gap-3 text-left"
+            >
+              {isChecked ? (
+                <CheckCircle size={20} color="#176C45" fill="#176C45" />
+              ) : (
+                <Circle size={20} color={theme.primary} />
+              )}
+              <span
+                className="text-sm font-semibold"
+                style={{ color: isChecked ? "#176C45" : "#1A1A1A", ...ts }}
+              >
+                Don't forget your {item.label.toLowerCase()}
+              </span>
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => setScreen("journey-detail", journey.id)}
+          className="w-full rounded-xl py-3.5 font-bold text-sm text-white active:scale-95 transition-transform"
+          style={{ backgroundColor: theme.primary }}
+        >
+          Open journey
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StepMediaPreview({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex flex-col gap-1.5">
+      {items.includes("Photo") && (
+        <div className="rounded-lg overflow-hidden border border-[#D8D1E3]">
+          <img
+            src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=360&h=140&fit=crop&auto=format"
+            alt="Step photo preview"
+            className="w-full h-20 object-cover"
+          />
+        </div>
+      )}
+      {items.includes("Voice") && (
+        <div className="rounded-lg border border-[#D8D1E3] bg-[#F7F6F9] px-2.5 py-2 flex items-center gap-2">
+          <Mic size={13} color="#4C16B3" />
+          <div className="flex-1 flex items-end gap-0.5 h-5" aria-hidden="true">
+            {[8, 14, 10, 18, 12, 16, 9, 13, 19, 11, 15, 8].map((height, i) => (
+              <span
+                key={i}
+                className="w-1 rounded-full bg-[#4C16B3]"
+                style={{ height }}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] font-bold text-[#4B5563]">0:18</span>
+        </div>
+      )}
+      {items.includes("Note") && (
+        <div className="rounded-lg border border-[#D8D1E3] bg-[#FFF4D6] px-2.5 py-2">
+          <p className="text-[10px] font-bold text-[#7A4B00]">Note preview</p>
+          <p className="text-[11px] text-[#4B5563]">
+            Ask staff for help if the platform changes.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -535,17 +613,17 @@ function JourneyDetailScreen({
   fontSize: number;
   onToggleStep: (journeyId: number, stepId: number) => void;
 }) {
-  const [addingNote, setAddingNote] = useState(false);
-  const [notes, setNotes] = useState(journey.notes);
-  const [stepMedia, setStepMedia] = useState<Record<number, string[]>>({});
   const ts = { fontSize };
   const done = journey.steps.filter((s) => s.done).length;
   const progress = (done / journey.steps.length) * 100;
   const currentStep = journey.steps[done] ?? journey.steps[journey.steps.length - 1];
+  const [stepMedia, setStepMedia] = useState<Record<number, string[]>>(() => ({
+    [currentStep.id]: ["Photo", "Voice", "Note"],
+  }));
   const addStepMedia = (stepId: number, type: string) => {
     setStepMedia((prev) => ({
       ...prev,
-      [stepId]: [...(prev[stepId] ?? []), type],
+      [stepId]: Array.from(new Set([...(prev[stepId] ?? []), type])),
     }));
   };
 
@@ -579,9 +657,6 @@ function JourneyDetailScreen({
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-bold text-[#1A1A1A]">
               Step {Math.min(done + 1, journey.steps.length)} of {journey.steps.length}
-            </span>
-            <span className="text-[11px] font-bold" style={{ color: theme.primary }}>
-              {Math.round(progress)}% complete
             </span>
           </div>
           <div className="h-2 bg-[#EDE8F4] rounded-full overflow-hidden">
@@ -683,49 +758,14 @@ function JourneyDetailScreen({
                           Attached to step {i + 1}: {(stepMedia[step.id] ?? []).join(", ")}
                         </p>
                       )}
+                      <StepMediaPreview items={stepMedia[step.id] ?? []} />
                     </div>
                   )}
+                  {!isCurrent && <StepMediaPreview items={stepMedia[step.id] ?? []} />}
                 </div>
               </div>
             );
           })}
-        </div>
-
-        {/* Notes card */}
-        <div className="bg-white rounded-xl border border-[#EDE8F4] p-3 mb-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Info size={13} color={theme.primary} />
-              <span className="text-xs font-bold text-[#1A1A1A]">Journey Notes</span>
-            </div>
-            <button onClick={() => setAddingNote(!addingNote)}>
-              <Edit3 size={13} color={theme.primary} />
-            </button>
-          </div>
-          {addingNote ? (
-            <textarea
-              className="w-full text-xs text-[#595959] leading-relaxed bg-[#F8F5FC] rounded-lg p-2 border border-[#EDE8F4] resize-none outline-none"
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              onBlur={() => setAddingNote(false)}
-              autoFocus
-            />
-          ) : (
-            <p className="text-xs text-[#595959] leading-relaxed">{notes}</p>
-          )}
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#EDE8F4] p-3 mb-3">
-          <div className="flex items-center gap-2">
-            <MapPin size={15} color={theme.primary} />
-            <div>
-              <p className="text-xs font-bold text-[#1A1A1A]">Current step media</p>
-              <p className="text-[11px] text-[#595959]">
-                Photo, voice and note attachments are saved against: {currentStep?.text}
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* SOS strip */}
@@ -752,6 +792,12 @@ function NewJourneyScreen({
   fontSize: number;
 }) {
   const [step, setStep] = useState(0);
+  const journeyImages = [
+    "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=180&fit=crop&auto=format",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&h=180&fit=crop&auto=format",
+    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=180&fit=crop&auto=format",
+  ];
+  const [journeyImage, setJourneyImage] = useState(journeyImages[0]);
   const [title, setTitle] = useState("");
   const [type, setType] = useState("Train");
   const [steps, setSteps] = useState([
@@ -768,11 +814,12 @@ function NewJourneyScreen({
   };
   const addMediaToDraftStep = (i: number, type: string) => {
     const copy = [...steps];
-    copy[i] = { ...copy[i], media: [...copy[i].media, type] };
+    copy[i] = { ...copy[i], media: Array.from(new Set([...copy[i].media, type])) };
     setSteps(copy);
   };
 
   const wizardSteps = [
+    { title: "Journey Image", sub: "Add a picture so the journey is easy to recognise." },
     { title: "Journey Name", sub: "What are you calling this journey?" },
     { title: "Transport Type", sub: "How are you travelling?" },
     { title: "Journey Steps", sub: "What are the steps to follow?" },
@@ -791,7 +838,7 @@ function NewJourneyScreen({
           </button>
           <div>
             <p className="text-[10px] text-[#767676] font-semibold uppercase tracking-wide">
-              New Journey · Step {step + 1} of 3
+              New Journey · Step {step + 1} of 4
             </p>
             <h2 className="text-sm font-black text-[#1A1A1A]" style={ts}>
               {wizardSteps[step].title}
@@ -814,10 +861,49 @@ function NewJourneyScreen({
         {step === 0 && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[0].sub}</p>
+            <div className="bg-white rounded-xl border border-[#D8D1E3] overflow-hidden">
+              <img
+                src={journeyImage}
+                alt="Journey image preview"
+                className="w-full h-36 object-cover"
+              />
+              <div className="p-3">
+                <p className="text-xs font-bold text-[#1A1A1A]">Journey image preview</p>
+                <p className="text-[11px] text-[#4B5563]">
+                  In the real app this would use camera roll access or a new photo.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {journeyImages.map((img, i) => (
+                <button
+                  key={img}
+                  onClick={() => setJourneyImage(img)}
+                  className="rounded-xl border-2 overflow-hidden"
+                  style={{ borderColor: journeyImage === img ? theme.primary : "#D8D1E3" }}
+                  aria-label={`Choose journey image ${i + 1}`}
+                >
+                  <img src={img} alt="" className="w-full h-14 object-cover" />
+                </button>
+              ))}
+            </div>
+            <button
+              className="flex items-center justify-center gap-2 rounded-xl border border-[#D8D1E3] bg-white py-3 text-sm font-bold"
+              style={{ color: theme.primary }}
+            >
+              <Image size={16} />
+              Upload journey image
+            </button>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[1].sub}</p>
             <input
               className="w-full border-2 rounded-xl px-3 py-3 text-sm text-[#1A1A1A] outline-none"
               style={{ borderColor: title ? theme.primary : "#EDE8F4", fontFamily: "inherit" }}
-              placeholder="e.g. Train to Edinburgh"
+              placeholder="e.g. Trip to Edinburgh"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -831,9 +917,9 @@ function NewJourneyScreen({
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[1].sub}</p>
+            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[2].sub}</p>
             {["Train", "Bus", "Walk", "Taxi"].map((t) => (
               <button
                 key={t}
@@ -864,9 +950,9 @@ function NewJourneyScreen({
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[2].sub}</p>
+            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[3].sub}</p>
             {steps.map((s, i) => (
               <div key={i} className="rounded-xl border border-[#D8D1E3] bg-white p-2.5">
                 <div className="flex items-center gap-2">
@@ -906,6 +992,9 @@ function NewJourneyScreen({
                     Attached to step {i + 1}: {s.media.join(", ")}
                   </p>
                 )}
+                <div className="ml-8">
+                  <StepMediaPreview items={s.media} />
+                </div>
               </div>
             ))}
             <button
@@ -922,12 +1011,12 @@ function NewJourneyScreen({
 
       <div className="px-4 pb-24 pt-2">
         <button
-          onClick={() => (step < 2 ? setStep(step + 1) : setScreen("journeys"))}
-          disabled={step === 0 && !title.trim()}
+          onClick={() => (step < 3 ? setStep(step + 1) : setScreen("journeys"))}
+          disabled={step === 1 && !title.trim()}
           className="w-full rounded-2xl py-3.5 font-bold text-sm text-white transition-all active:scale-95 disabled:opacity-40"
           style={{ backgroundColor: theme.primary }}
         >
-          {step < 2 ? "Continue" : "Save Journey"}
+          {step < 3 ? "Continue" : "Save Journey"}
         </button>
       </div>
     </div>
@@ -938,14 +1027,15 @@ function SafetyScreen({
   theme,
   contacts,
   setScreen,
+  onRemoveContact,
   fontSize,
 }: {
   theme: typeof THEMES.enable;
   contacts: typeof SAMPLE_CONTACTS;
   setScreen: (s: Screen) => void;
+  onRemoveContact: (id: number) => void;
   fontSize: number;
 }) {
-  const [sharing, setSharing] = useState(false);
   const ts = { fontSize };
 
   return (
@@ -969,49 +1059,12 @@ function SafetyScreen({
             </div>
           </button>
           <p className="text-white/70 text-[11px] max-w-[180px] leading-relaxed">
-            Pressing SOS will alert your emergency contacts and share your location
+            Pressing SOS will alert your emergency contacts.
           </p>
         </div>
       </div>
 
       <div className="px-4 pt-4 pb-24 flex flex-col gap-4">
-        {/* Location sharing */}
-        <div className="bg-white rounded-2xl border border-[#EDE8F4] p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <MapPin size={15} color={theme.primary} />
-              <span className="text-sm font-bold text-[#1A1A1A]" style={ts}>
-                Share My Location
-              </span>
-            </div>
-            <button
-              onClick={() => setSharing(!sharing)}
-              className="w-12 h-6 rounded-full transition-colors relative"
-              style={{ backgroundColor: sharing ? theme.primary : "#C0A8D8" }}
-              aria-pressed={sharing}
-              aria-label="Toggle location sharing"
-            >
-              <div
-                className="w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow-sm"
-                style={{ left: sharing ? "26px" : "2px" }}
-              />
-            </button>
-          </div>
-          {sharing && (
-            <div className="bg-[#E8F5EC] rounded-lg px-3 py-2 flex items-center gap-2">
-              <CheckCircle size={13} color="#186830" />
-              <p className="text-xs text-[#186830] font-semibold">
-                Location shared with your emergency contacts
-              </p>
-            </div>
-          )}
-          {!sharing && (
-            <p className="text-xs text-[#767676]">
-              Turn on to let your contacts see where you are
-            </p>
-          )}
-        </div>
-
         {/* Emergency contacts */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
@@ -1033,7 +1086,7 @@ function SafetyScreen({
             {contacts.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-xl border border-[#EDE8F4] px-3 py-2.5 flex items-center gap-3"
+                className="bg-white rounded-xl border border-[#EDE8F4] px-3 py-2.5 flex items-center gap-2"
               >
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
@@ -1049,11 +1102,28 @@ function SafetyScreen({
                 </div>
                 <a
                   href={`tel:${c.phone}`}
-                  className="w-9 h-9 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: "#E8F5EC" }}
+                  aria-label={`Call ${c.name}`}
                 >
                   <Phone size={14} color="#186830" />
                 </a>
+                <a
+                  href={`sms:${c.phone}`}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: theme.primaryLight }}
+                  aria-label={`Message ${c.name}`}
+                >
+                  <MessageSquare size={14} color={theme.primary} />
+                </a>
+                <button
+                  onClick={() => onRemoveContact(c.id)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#FFEBE9" }}
+                  aria-label={`Remove ${c.name}`}
+                >
+                  <Trash2 size={14} color="#B42318" />
+                </button>
               </div>
             ))}
           </div>
@@ -1080,6 +1150,109 @@ function SafetyScreen({
   );
 }
 
+function ContactsScreen({
+  theme,
+  setScreen,
+  onAddContact,
+  fontSize,
+}: {
+  theme: typeof THEMES.enable;
+  setScreen: (s: Screen) => void;
+  onAddContact: (contact: { name: string; phone: string; relation: string }) => void;
+  fontSize: number;
+}) {
+  const [name, setName] = useState("Aisha (Support Worker)");
+  const [phone, setPhone] = useState("07700 900789");
+  const [relation, setRelation] = useState("Support Worker");
+  const ts = { fontSize };
+
+  const save = () => {
+    if (!name.trim() || !phone.trim()) return;
+    onAddContact({ name, phone, relation });
+    setScreen("safety");
+  };
+
+  return (
+    <div className="flex flex-col bg-[#F8F5FC] min-h-full">
+      <div className="flex items-center gap-2 px-4 pt-4 pb-3 bg-white border-b border-[#EDE8F4]">
+        <button
+          onClick={() => setScreen("safety")}
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: theme.primaryLight }}
+        >
+          <ChevronLeft size={16} color={theme.primary} />
+        </button>
+        <div>
+          <h2 className="text-sm font-black text-[#1A1A1A]" style={ts}>Add contact</h2>
+          <p className="text-[10px] text-[#767676]">Choose from contacts or enter manually</p>
+        </div>
+      </div>
+
+      <div className="px-4 pt-4 pb-24 flex flex-col gap-3">
+        <button
+          className="bg-white rounded-xl border border-[#D8D1E3] px-4 py-3 flex items-center gap-3 text-left"
+          style={{ color: theme.primary }}
+        >
+          <User size={16} />
+          <span className="text-sm font-bold">Choose from phone contacts</span>
+        </button>
+
+        <div className="bg-white rounded-xl border border-[#D8D1E3] p-3 flex flex-col gap-3">
+          <label className="text-xs font-bold text-[#4B5563]">
+            Name
+            <input
+              className="mt-1 w-full border-2 rounded-xl px-3 py-2.5 text-sm text-[#1A1A1A] outline-none"
+              style={{ borderColor: "#D8D1E3", fontFamily: "inherit" }}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label className="text-xs font-bold text-[#4B5563]">
+            Phone number
+            <input
+              className="mt-1 w-full border-2 rounded-xl px-3 py-2.5 text-sm text-[#1A1A1A] outline-none"
+              style={{ borderColor: "#D8D1E3", fontFamily: "inherit" }}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </label>
+          <label className="text-xs font-bold text-[#4B5563]">
+            Relationship
+            <input
+              className="mt-1 w-full border-2 rounded-xl px-3 py-2.5 text-sm text-[#1A1A1A] outline-none"
+              style={{ borderColor: "#D8D1E3", fontFamily: "inherit" }}
+              value={relation}
+              onChange={(e) => setRelation(e.target.value)}
+            />
+          </label>
+        </div>
+
+        <div className="bg-white rounded-xl border border-[#D8D1E3] px-3 py-2.5 flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
+            style={{ backgroundColor: theme.primary }}
+          >
+            {name.trim()[0] || "?"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-[#1A1A1A] truncate" style={ts}>{name}</p>
+            <p className="text-[10px] text-[#767676] font-mono">{phone}</p>
+          </div>
+          <span className="text-[10px] font-bold text-[#4B5563]">{relation}</span>
+        </div>
+
+        <button
+          onClick={save}
+          className="w-full rounded-xl py-3.5 font-bold text-sm text-white"
+          style={{ backgroundColor: theme.primary }}
+        >
+          Save contact
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function HelpScreen({
   theme,
   setScreen,
@@ -1094,18 +1267,10 @@ function HelpScreen({
     <div className="bg-[#F8F5FC] min-h-full">
       <div className="px-4 pt-4 pb-3 bg-white border-b border-[#EDE8F4]">
         <h2 className="text-lg font-black text-[#1A1A1A]" style={ts}>Help & Guidance</h2>
-        <p className="text-xs text-[#767676]">Tutorials, FAQs, and support</p>
+        <p className="text-xs text-[#767676]">FAQs and Enable Scotland support</p>
       </div>
       <div className="px-4 pt-4 pb-24 flex flex-col gap-3">
         {[
-          {
-            icon: BookOpen,
-            title: "How to use this app",
-            sub: "Step-by-step video tutorials",
-            screen: "tutorial" as Screen,
-            color: "#1565C0",
-            bg: "#E3F0FF",
-          },
           {
             icon: HelpCircle,
             title: "Frequently Asked Questions",
@@ -1123,45 +1288,43 @@ function HelpScreen({
             bg: "#E0F2F0",
             href: "https://www.enable.org.uk",
           },
-        ].map(({ icon: Icon, title, sub, screen: s, color, bg }) => (
-          <button
+        ].map(({ icon: Icon, title, sub, screen: s, color, bg, href }) => {
+          const content = (
+            <>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: bg }}
+              >
+                <Icon size={18} color={color} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[#1A1A1A]" style={ts}>{title}</p>
+                <p className="text-xs text-[#767676]">{sub}</p>
+              </div>
+              <ChevronRight size={16} color="#C0A8D8" />
+            </>
+          );
+
+          return href ? (
+            <a
+              key={title}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl border border-[#EDE8F4] px-4 py-4 flex items-center gap-3 text-left active:bg-[#F3E8FF] transition-colors"
+            >
+              {content}
+            </a>
+          ) : (
+            <button
             key={title}
             onClick={() => s && setScreen(s)}
             className="bg-white rounded-2xl border border-[#EDE8F4] px-4 py-4 flex items-center gap-3 text-left active:bg-[#F3E8FF] transition-colors"
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: bg }}
-            >
-              <Icon size={18} color={color} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#1A1A1A]" style={ts}>{title}</p>
-              <p className="text-xs text-[#767676]">{sub}</p>
-            </div>
-            <ChevronRight size={16} color="#C0A8D8" />
-          </button>
-        ))}
-
-        <div className="mt-2">
-          <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider mb-2.5">
-            Quick Tips
-          </p>
-          {[
-            "Tap any journey step to mark it done",
-            "Press SOS if you need immediate help",
-            "Your journeys work without internet",
-            "Use text-to-speech in Settings to hear steps read aloud",
-          ].map((tip, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-2.5 py-2.5 border-b border-[#EDE8F4] last:border-b-0"
-            >
-              <Star size={13} color={theme.accent || theme.primary} className="flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-[#595959] leading-relaxed" style={ts}>{tip}</p>
-            </div>
-          ))}
-        </div>
+              {content}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1309,25 +1472,14 @@ function SettingsScreen({
   setThemeKey,
   tts,
   setTts,
-  offline,
-  setOffline,
   fontSize,
-  setFontSize,
-  lang,
-  setLang,
-  fontSize: _fs,
 }: {
   theme: typeof THEMES.enable;
   themeKey: ThemeKey;
   setThemeKey: (k: ThemeKey) => void;
   tts: boolean;
   setTts: (v: boolean) => void;
-  offline: boolean;
-  setOffline: (v: boolean) => void;
   fontSize: number;
-  setFontSize: (v: number) => void;
-  lang: string;
-  setLang: (v: string) => void;
 }) {
   const ts = { fontSize };
 
@@ -1411,59 +1563,6 @@ function SettingsScreen({
           </div>
         </div>
 
-        {/* Text size */}
-        <div>
-          <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider mb-2.5">
-            Text Size
-          </p>
-          <div className="bg-white rounded-2xl border border-[#EDE8F4] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#767676]">A</span>
-              <span className="font-semibold text-base text-[#1A1A1A]">A</span>
-              <span className="font-black text-xl text-[#1A1A1A]">A</span>
-            </div>
-            <input
-              type="range"
-              min={11}
-              max={17}
-              value={fontSize}
-              onChange={(e) => setFontSize(Number(e.target.value))}
-              className="w-full accent-current"
-              style={{ accentColor: theme.primary }}
-            />
-            <p className="text-center text-xs text-[#767676] mt-1">
-              Current: {fontSize}px
-            </p>
-          </div>
-        </div>
-
-        {/* Language */}
-        <div>
-          <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider mb-2.5">
-            Language
-          </p>
-          <div className="bg-white rounded-2xl border border-[#EDE8F4] overflow-hidden">
-            {[
-              { code: "en", label: "English" },
-              { code: "gd", label: "Gàidhlig (Scottish Gaelic)" },
-              { code: "pl", label: "Polski (Polish)" },
-              { code: "ur", label: "اردو (Urdu)" },
-            ].map((l) => (
-              <button
-                key={l.code}
-                onClick={() => setLang(l.code)}
-                className="w-full flex items-center justify-between px-4 py-3 border-b border-[#EDE8F4] last:border-0"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe size={14} color={theme.primary} />
-                  <span className="text-sm text-[#1A1A1A]" style={ts}>{l.label}</span>
-                </div>
-                {lang === l.code && <CheckCircle size={15} color={theme.primary} />}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Toggles */}
         <div>
           <p className="text-[11px] font-bold text-[#595959] uppercase tracking-wider mb-2.5">
@@ -1476,13 +1575,6 @@ function SettingsScreen({
               label="Text-to-Speech"
               sub="Read journey steps out loud"
               icon={Volume2}
-            />
-            <Toggle
-              value={offline}
-              onChange={setOffline}
-              label="Offline Mode"
-              sub="Simulate no internet connection"
-              icon={WifiOff}
             />
           </div>
         </div>
@@ -1514,12 +1606,12 @@ export default function App() {
   const [lang, setLang] = useState("en");
   const [sosPressed, setSosPressed] = useState(false);
   const [journeys, setJourneys] = useState(SAMPLE_JOURNEYS);
-  const [contacts] = useState(SAMPLE_CONTACTS);
+  const [contacts, setContacts] = useState(SAMPLE_CONTACTS);
 
   const theme = THEMES[themeKey];
 
   const navigate = (s: Screen, extra?: number) => {
-    if (s === "journey-detail" && extra != null) {
+    if ((s === "journey-detail" || s === "journey-prep") && extra != null) {
       setActiveJourneyId(extra);
     }
     setScreen(s);
@@ -1541,6 +1633,18 @@ export default function App() {
   };
 
   const activeJourney = journeys.find((j) => j.id === activeJourneyId) ?? journeys[0];
+  const addContact = (contact: { name: string; phone: string; relation: string }) => {
+    setContacts((prev) => [
+      ...prev,
+      {
+        id: Math.max(0, ...prev.map((c) => c.id)) + 1,
+        ...contact,
+      },
+    ]);
+  };
+  const removeContact = (id: number) => {
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+  };
 
   const NAV_TABS = [
     { id: "home" as Screen, icon: Home, label: "Home" },
@@ -1550,7 +1654,7 @@ export default function App() {
     { id: "settings" as Screen, icon: Settings, label: "Settings" },
   ];
 
-  const isSubScreen = ["journey-detail", "journey-new", "faq", "tutorial", "contacts"].includes(screen);
+  const isSubScreen = ["journey-prep", "journey-detail", "journey-new", "faq", "tutorial", "contacts"].includes(screen);
   const mainTab = isSubScreen
     ? screen.startsWith("journey")
       ? "journeys"
@@ -1615,8 +1719,6 @@ export default function App() {
             {screen === "home" && (
               <HomeScreen
                 theme={theme}
-                tts={tts}
-                offline={offline}
                 setScreen={navigate}
                 journeys={journeys}
                 fontSize={fontSize}
@@ -1626,6 +1728,14 @@ export default function App() {
               <JourneysScreen
                 theme={theme}
                 journeys={journeys}
+                setScreen={navigate}
+                fontSize={fontSize}
+              />
+            )}
+            {screen === "journey-prep" && (
+              <JourneyPrepScreen
+                theme={theme}
+                journey={activeJourney}
                 setScreen={navigate}
                 fontSize={fontSize}
               />
@@ -1652,6 +1762,7 @@ export default function App() {
                 theme={theme}
                 contacts={contacts}
                 setScreen={navigate}
+                onRemoveContact={removeContact}
                 fontSize={fontSize}
               />
             )}
@@ -1664,6 +1775,14 @@ export default function App() {
             {screen === "tutorial" && (
               <TutorialScreen theme={theme} setScreen={navigate} fontSize={fontSize} />
             )}
+            {screen === "contacts" && (
+              <ContactsScreen
+                theme={theme}
+                setScreen={navigate}
+                onAddContact={addContact}
+                fontSize={fontSize}
+              />
+            )}
             {screen === "settings" && (
               <SettingsScreen
                 theme={theme}
@@ -1671,12 +1790,7 @@ export default function App() {
                 setThemeKey={setThemeKey}
                 tts={tts}
                 setTts={setTts}
-                offline={offline}
-                setOffline={setOffline}
                 fontSize={fontSize}
-                setFontSize={setFontSize}
-                lang={lang}
-                setLang={setLang}
               />
             )}
           </div>
