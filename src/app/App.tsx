@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type Dispatch, type SetStateAction } from "react";
 import {
   Home,
   Map,
@@ -18,8 +18,6 @@ import {
   CheckCircle,
   Circle,
   X,
-  Wifi,
-  WifiOff,
   Volume2,
   VolumeX,
   Globe,
@@ -29,7 +27,6 @@ import {
   ExternalLink,
   User,
   Image,
-  Trash2,
   Edit3,
   Share2,
   BookOpen,
@@ -106,6 +103,7 @@ type ThemeKey = keyof typeof THEMES;
 type Screen =
   | "home"
   | "journeys"
+  | "checklist-edit"
   | "journey-prep"
   | "journey-detail"
   | "journey-new"
@@ -184,6 +182,14 @@ const SAMPLE_CONTACTS = [
   { id: 1, name: "Sarah (Support Worker)", phone: "07700 900123", relation: "Support Worker" },
   { id: 2, name: "Mum", phone: "07700 900456", relation: "Family" },
   { id: 3, name: "Enable Scotland Helpline", phone: "0300 0200 101", relation: "Enable Scotland" },
+];
+
+const DEFAULT_PRE_JOURNEY_CHECKLIST = [
+  { id: "keys", label: "Keys" },
+  { id: "ticket", label: "Ticket or travel card" },
+  { id: "phone", label: "Phone charged" },
+  { id: "umbrella", label: "Umbrella or coat" },
+  { id: "support", label: "Support contact card" },
 ];
 
 const FAQS = [
@@ -323,7 +329,7 @@ function HomeScreen({
                     className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: theme.primaryLight }}
                   >
-                    <JourneyIcon type={j.type} size={16} color={theme.primary} />
+                    <Map size={16} color={theme.primary} />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -362,7 +368,7 @@ function HomeScreen({
                 icon: CheckCircle,
                 label: "Checklist",
                 sub: "Review saved journey tasks",
-                screen: "journeys" as Screen,
+                screen: "checklist-edit" as Screen,
                 bg: theme.primaryLight,
                 fg: theme.primary,
               },
@@ -408,6 +414,18 @@ function JourneysScreen({
   fontSize: number;
 }) {
   const ts = { fontSize };
+  const [swipedContactId, setSwipedContactId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const contactToDelete = contacts.find((contact) => contact.id === confirmDeleteId);
+
+  const revealDelete = (id: number) => setSwipedContactId(id);
+  const handlePointerUp = (id: number, x: number) => {
+    if (dragStartX != null && dragStartX - x > 36) {
+      revealDelete(id);
+    }
+    setDragStartX(null);
+  };
   return (
     <div className="flex flex-col gap-0 bg-[#F8F5FC] min-h-full">
       <div className="px-4 pt-4 pb-3 bg-white border-b border-[#EDE8F4]">
@@ -435,19 +453,13 @@ function JourneysScreen({
             <div className="px-3 py-3">
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: theme.primaryLight }}
-                  >
-                    <JourneyIcon type={j.type} size={14} color={theme.primary} />
-                  </div>
                   <p className="text-sm font-bold text-[#1A1A1A] leading-snug" style={ts}>
                     {j.title}
                   </p>
                 </div>
                 <StatusBadge status={j.status} theme={theme} />
               </div>
-              <div className="flex items-center gap-3 ml-10">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <CheckCircle size={10} color="#176C45" />
                   <span className="text-[10px] text-[#176C45]">
@@ -466,11 +478,13 @@ function JourneysScreen({
 function JourneyPrepScreen({
   theme,
   journey,
+  checklistItems,
   setScreen,
   fontSize,
 }: {
   theme: typeof THEMES.enable;
   journey: (typeof SAMPLE_JOURNEYS)[0];
+  checklistItems: typeof DEFAULT_PRE_JOURNEY_CHECKLIST;
   setScreen: (s: Screen, extra?: number) => void;
   fontSize: number;
 }) {
@@ -479,16 +493,9 @@ function JourneyPrepScreen({
     phone: true,
   });
   const ts = { fontSize };
-  const items = [
-    { id: "keys", label: "Keys" },
-    { id: "ticket", label: "Ticket or travel card" },
-    { id: "phone", label: "Phone charged" },
-    { id: "umbrella", label: "Umbrella or coat" },
-    { id: "support", label: "Support contact card" },
-  ];
 
   return (
-    <div className="flex flex-col bg-[#F8F5FC] min-h-full">
+    <div className="relative flex flex-col bg-[#F8F5FC] min-h-full">
       <div className="bg-white border-b border-[#EDE8F4]">
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
           <button
@@ -522,7 +529,7 @@ function JourneyPrepScreen({
           </p>
         </div>
 
-        {items.map((item) => {
+        {checklistItems.map((item) => {
           const isChecked = checked[item.id] ?? false;
           return (
             <button
@@ -550,8 +557,107 @@ function JourneyPrepScreen({
           className="w-full rounded-xl py-3.5 font-bold text-sm text-white active:scale-95 transition-transform"
           style={{ backgroundColor: theme.primary }}
         >
-          Open journey
+          Start Journey
         </button>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistEditScreen({
+  theme,
+  checklistItems,
+  setChecklistItems,
+  setScreen,
+  fontSize,
+}: {
+  theme: typeof THEMES.enable;
+  checklistItems: typeof DEFAULT_PRE_JOURNEY_CHECKLIST;
+  setChecklistItems: Dispatch<SetStateAction<typeof DEFAULT_PRE_JOURNEY_CHECKLIST>>;
+  setScreen: (s: Screen) => void;
+  fontSize: number;
+}) {
+  const [newItem, setNewItem] = useState("Water bottle");
+  const ts = { fontSize };
+
+  const updateItem = (id: string, label: string) => {
+    setChecklistItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, label } : item))
+    );
+  };
+
+  const addItem = () => {
+    const label = newItem.trim();
+    if (!label) return;
+    setChecklistItems((prev) => [
+      ...prev,
+      { id: `item-${Date.now()}`, label },
+    ]);
+    setNewItem("");
+  };
+
+  const removeItem = (id: string) => {
+    setChecklistItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  return (
+    <div className="relative flex flex-col bg-[#F8F5FC] min-h-full">
+      <div className="flex items-center gap-2 px-4 pt-4 pb-3 bg-white border-b border-[#EDE8F4]">
+        <button
+          onClick={() => setScreen("home")}
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: theme.primaryLight }}
+        >
+          <ChevronLeft size={16} color={theme.primary} />
+        </button>
+        <div>
+          <h2 className="text-sm font-black text-[#1A1A1A]" style={ts}>
+            Edit journey checklist
+          </h2>
+          <p className="text-[10px] text-[#767676]">Shown before every journey starts</p>
+        </div>
+      </div>
+
+      <div className="px-4 pt-4 pb-24 flex flex-col gap-3">
+        {checklistItems.map((item) => (
+          <div key={item.id} className="bg-white rounded-xl border border-[#D8D1E3] p-2.5 flex items-center gap-2">
+            <CheckCircle size={18} color="#176C45" className="flex-shrink-0" />
+            <input
+              value={item.label}
+              onChange={(e) => updateItem(item.id, e.target.value)}
+              className="flex-1 rounded-lg border border-[#D8D1E3] px-2.5 py-2 text-sm text-[#1A1A1A] outline-none"
+              style={{ fontFamily: "inherit" }}
+            />
+            <button
+              onClick={() => removeItem(item.id)}
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#FFEBE9" }}
+              aria-label={`Remove ${item.label}`}
+            >
+              <X size={14} color="#B42318" />
+            </button>
+          </div>
+        ))}
+
+        <div className="bg-white rounded-xl border border-[#D8D1E3] p-3">
+          <label className="text-xs font-bold text-[#4B5563]">
+            Add checklist item
+            <input
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              className="mt-1 w-full border-2 rounded-xl px-3 py-2.5 text-sm text-[#1A1A1A] outline-none"
+              style={{ borderColor: "#D8D1E3", fontFamily: "inherit" }}
+              placeholder="e.g. Medication"
+            />
+          </label>
+          <button
+            onClick={addItem}
+            className="mt-3 w-full rounded-xl py-3 font-bold text-sm text-white"
+            style={{ backgroundColor: theme.primary }}
+          >
+            Add to checklist
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -628,7 +734,7 @@ function JourneyDetailScreen({
   };
 
   return (
-    <div className="flex flex-col bg-[#F8F5FC] min-h-full">
+    <div className="relative flex flex-col bg-[#F8F5FC] min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-[#EDE8F4]">
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
@@ -768,14 +874,13 @@ function JourneyDetailScreen({
           })}
         </div>
 
-        {/* SOS strip */}
         <button
-          onClick={() => setScreen("safety")}
+          onClick={() => setScreen("journeys")}
           className="w-full rounded-xl py-3 flex items-center justify-center gap-2 font-bold text-sm text-white active:scale-95 transition-transform"
-          style={{ backgroundColor: "#C62828" }}
+          style={{ backgroundColor: "#176C45" }}
         >
-          <AlertOctagon size={16} />
-          Need Help? Press SOS
+          <CheckCircle size={16} />
+          Complete Journey
         </button>
       </div>
     </div>
@@ -799,7 +904,6 @@ function NewJourneyScreen({
   ];
   const [journeyImage, setJourneyImage] = useState(journeyImages[0]);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("Train");
   const [steps, setSteps] = useState([
     { text: "", media: [] as string[] },
     { text: "", media: [] as string[] },
@@ -821,7 +925,6 @@ function NewJourneyScreen({
   const wizardSteps = [
     { title: "Journey Image", sub: "Add a picture so the journey is easy to recognise." },
     { title: "Journey Name", sub: "What are you calling this journey?" },
-    { title: "Transport Type", sub: "How are you travelling?" },
     { title: "Journey Steps", sub: "What are the steps to follow?" },
   ];
 
@@ -838,7 +941,7 @@ function NewJourneyScreen({
           </button>
           <div>
             <p className="text-[10px] text-[#767676] font-semibold uppercase tracking-wide">
-              New Journey · Step {step + 1} of 4
+              New Journey · Step {step + 1} of 3
             </p>
             <h2 className="text-sm font-black text-[#1A1A1A]" style={ts}>
               {wizardSteps[step].title}
@@ -920,39 +1023,6 @@ function NewJourneyScreen({
         {step === 2 && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[2].sub}</p>
-            {["Train", "Bus", "Walk", "Taxi"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 border-2 text-left transition-all"
-                style={{
-                  borderColor: type === t ? theme.primary : "#EDE8F4",
-                  backgroundColor: type === t ? theme.primaryLight : "#FFFFFF",
-                }}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: type === t ? theme.primary : "#EDE8F4" }}
-                >
-                  <JourneyIcon type={t} size={14} color={type === t ? "#FFFFFF" : "#767676"} />
-                </div>
-                <span
-                  className="font-semibold text-sm"
-                  style={{ color: type === t ? theme.primary : "#1A1A1A" }}
-                >
-                  {t}
-                </span>
-                {type === t && (
-                  <CheckCircle size={16} color={theme.primary} className="ml-auto" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-[#595959]" style={ts}>{wizardSteps[3].sub}</p>
             {steps.map((s, i) => (
               <div key={i} className="rounded-xl border border-[#D8D1E3] bg-white p-2.5">
                 <div className="flex items-center gap-2">
@@ -1011,12 +1081,12 @@ function NewJourneyScreen({
 
       <div className="px-4 pb-24 pt-2">
         <button
-          onClick={() => (step < 3 ? setStep(step + 1) : setScreen("journeys"))}
+          onClick={() => (step < 2 ? setStep(step + 1) : setScreen("journeys"))}
           disabled={step === 1 && !title.trim()}
           className="w-full rounded-2xl py-3.5 font-bold text-sm text-white transition-all active:scale-95 disabled:opacity-40"
           style={{ backgroundColor: theme.primary }}
         >
-          {step < 3 ? "Continue" : "Save Journey"}
+          {step < 2 ? "Continue" : "Save Journey"}
         </button>
       </div>
     </div>
@@ -1086,44 +1156,55 @@ function SafetyScreen({
             {contacts.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-xl border border-[#EDE8F4] px-3 py-2.5 flex items-center gap-2"
+                className="relative overflow-hidden rounded-xl border border-[#EDE8F4] bg-[#B42318]"
               >
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    onClick={() => setConfirmDeleteId(c.id)}
+                    className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#B42318]"
+                  >
+                    Delete
+                  </button>
+                </div>
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
-                  style={{ backgroundColor: theme.primary }}
+                  className="relative bg-white px-3 py-2.5 flex items-center gap-2 transition-transform"
+                  style={{
+                    transform: swipedContactId === c.id ? "translateX(-82px)" : "translateX(0)",
+                  }}
+                  onPointerDown={(event) => setDragStartX(event.clientX)}
+                  onPointerUp={(event) => handlePointerUp(c.id, event.clientX)}
+                  onDoubleClick={() => revealDelete(c.id)}
                 >
-                  {c.name[0]}
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
+                    style={{ backgroundColor: theme.primary }}
+                  >
+                    {c.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1A1A1A] truncate" style={ts}>
+                      {c.name}
+                    </p>
+                    <p className="text-[10px] text-[#767676] font-mono">{c.phone}</p>
+                    <p className="text-[9px] text-[#767676]">Swipe left to delete</p>
+                  </div>
+                  <a
+                    href={`tel:${c.phone}`}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "#E8F5EC" }}
+                    aria-label={`Call ${c.name}`}
+                  >
+                    <Phone size={14} color="#186830" />
+                  </a>
+                  <a
+                    href={`sms:${c.phone}`}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: theme.primaryLight }}
+                    aria-label={`Message ${c.name}`}
+                  >
+                    <MessageSquare size={14} color={theme.primary} />
+                  </a>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#1A1A1A] truncate" style={ts}>
-                    {c.name}
-                  </p>
-                  <p className="text-[10px] text-[#767676] font-mono">{c.phone}</p>
-                </div>
-                <a
-                  href={`tel:${c.phone}`}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "#E8F5EC" }}
-                  aria-label={`Call ${c.name}`}
-                >
-                  <Phone size={14} color="#186830" />
-                </a>
-                <a
-                  href={`sms:${c.phone}`}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: theme.primaryLight }}
-                  aria-label={`Message ${c.name}`}
-                >
-                  <MessageSquare size={14} color={theme.primary} />
-                </a>
-                <button
-                  onClick={() => onRemoveContact(c.id)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "#FFEBE9" }}
-                  aria-label={`Remove ${c.name}`}
-                >
-                  <Trash2 size={14} color="#B42318" />
-                </button>
               </div>
             ))}
           </div>
@@ -1146,6 +1227,38 @@ function SafetyScreen({
           </div>
         </div>
       </div>
+      {contactToDelete && (
+        <div className="absolute inset-0 z-20 bg-black/40 flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl p-4 shadow-2xl border border-[#D8D1E3]">
+            <h3 className="text-base font-black text-[#1A1A1A]" style={ts}>
+              Delete emergency contact?
+            </h3>
+            <p className="text-xs text-[#4B5563] mt-2">
+              Are you sure you want to delete {contactToDelete.name} as an emergency contact?
+            </p>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-xl border border-[#D8D1E3] py-2.5 text-sm font-bold"
+                style={{ color: theme.primary }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onRemoveContact(contactToDelete.id);
+                  setConfirmDeleteId(null);
+                  setSwipedContactId(null);
+                }}
+                className="rounded-xl py-2.5 text-sm font-bold text-white"
+                style={{ backgroundColor: "#B42318" }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1601,12 +1714,10 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
   const [tts, setTts] = useState(false);
-  const [offline, setOffline] = useState(false);
   const [fontSize, setFontSize] = useState(13);
-  const [lang, setLang] = useState("en");
-  const [sosPressed, setSosPressed] = useState(false);
   const [journeys, setJourneys] = useState(SAMPLE_JOURNEYS);
   const [contacts, setContacts] = useState(SAMPLE_CONTACTS);
+  const [checklistItems, setChecklistItems] = useState(DEFAULT_PRE_JOURNEY_CHECKLIST);
 
   const theme = THEMES[themeKey];
 
@@ -1654,7 +1765,7 @@ export default function App() {
     { id: "settings" as Screen, icon: Settings, label: "Settings" },
   ];
 
-  const isSubScreen = ["journey-prep", "journey-detail", "journey-new", "faq", "tutorial", "contacts"].includes(screen);
+  const isSubScreen = ["checklist-edit", "journey-prep", "journey-detail", "journey-new", "faq", "tutorial", "contacts"].includes(screen);
   const mainTab = isSubScreen
     ? screen.startsWith("journey")
       ? "journeys"
@@ -1681,11 +1792,6 @@ export default function App() {
           <div className="bg-black h-7 flex items-center justify-center relative z-10">
             <div className="w-28 h-5 bg-black rounded-b-2xl absolute top-0 left-1/2 -translate-x-1/2 border-b border-x border-[#1a1a2e]" />
             <div className="absolute right-5 top-1.5 flex items-center gap-1.5">
-              {offline ? (
-                <WifiOff size={9} color="#AAAAAA" />
-              ) : (
-                <Wifi size={9} color="#AAAAAA" />
-              )}
               <span className="text-[8px] text-[#AAAAAA] font-mono">14:32</span>
             </div>
           </div>
@@ -1707,11 +1813,6 @@ export default function App() {
               </div>
               <div className="flex items-center gap-2">
                 {tts && <Volume2 size={13} color="rgba(255,255,255,0.7)" />}
-                {offline && <WifiOff size={13} color="rgba(255,255,255,0.7)" />}
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: offline ? "#FF6B6B" : "#69F0AE" }}
-                />
               </div>
             </div>
 
@@ -1732,10 +1833,20 @@ export default function App() {
                 fontSize={fontSize}
               />
             )}
+            {screen === "checklist-edit" && (
+              <ChecklistEditScreen
+                theme={theme}
+                checklistItems={checklistItems}
+                setChecklistItems={setChecklistItems}
+                setScreen={navigate}
+                fontSize={fontSize}
+              />
+            )}
             {screen === "journey-prep" && (
               <JourneyPrepScreen
                 theme={theme}
                 journey={activeJourney}
+                checklistItems={checklistItems}
                 setScreen={navigate}
                 fontSize={fontSize}
               />
