@@ -414,18 +414,6 @@ function JourneysScreen({
   fontSize: number;
 }) {
   const ts = { fontSize };
-  const [swipedContactId, setSwipedContactId] = useState<number | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [dragStartX, setDragStartX] = useState<number | null>(null);
-  const contactToDelete = contacts.find((contact) => contact.id === confirmDeleteId);
-
-  const revealDelete = (id: number) => setSwipedContactId(id);
-  const handlePointerUp = (id: number, x: number) => {
-    if (dragStartX != null && dragStartX - x > 36) {
-      revealDelete(id);
-    }
-    setDragStartX(null);
-  };
   return (
     <div className="flex flex-col gap-0 bg-[#F8F5FC] min-h-full">
       <div className="px-4 pt-4 pb-3 bg-white border-b border-[#EDE8F4]">
@@ -1107,6 +1095,18 @@ function SafetyScreen({
   fontSize: number;
 }) {
   const ts = { fontSize };
+  const [swipedContactId, setSwipedContactId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const contactToDelete = contacts.find((contact) => contact.id === confirmDeleteId);
+
+  const revealDelete = (id: number) => setSwipedContactId(id);
+  const handlePointerUp = (id: number, x: number) => {
+    if (dragStartX != null && dragStartX - x > 36) {
+      revealDelete(id);
+    }
+    setDragStartX(null);
+  };
 
   return (
     <div className="flex flex-col bg-[#F8F5FC] min-h-full">
